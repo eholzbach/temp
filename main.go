@@ -35,14 +35,14 @@ func sendGraphite(g *graphite.Graphite, temperature float64, humidity float64, p
 	name, _ := os.Hostname()
 
 	metric := fmt.Sprintf("temp.%s.%s", name, "temperature")
-	a := strconv.FormatFloat(temperature, 'f', 6, 64) 
-        g.SimpleSend(metric, a)
+	a := strconv.FormatFloat(temperature, 'f', 6, 64)
+	g.SimpleSend(metric, a)
 
 	metric = fmt.Sprintf("temp.%s.%s", name, "humidity")
 	a = strconv.FormatFloat(humidity, 'f', 6, 64)
 	g.SimpleSend(metric, a)
 
-        metric = fmt.Sprintf("temp.%s.%s", name, "pressure")
+	metric = fmt.Sprintf("temp.%s.%s", name, "pressure")
 	a = strconv.FormatFloat(pressure, 'f', 6, 64)
 	g.SimpleSend(metric, a)
 }
@@ -60,8 +60,9 @@ func sensorData(sensor *i2c.Device) (float64, float64, float64, error) {
 
 func main() {
 	// parse flags
-	enableOled := flag.Bool("oled", false, "enable SSD1306 OLED")
 	enableGraphite := flag.String("graphite", "none", "send to graphite, requires fqdn:port")
+	enableOled := flag.Bool("oled", false, "enable SSD1306 OLED")
+	enableStdout := flag.Bool("stdout", false, "print to stdout")
 	flag.Parse()
 
 	// init sensor
@@ -78,7 +79,7 @@ func main() {
 
 	// init graphite if enabled
 	var metricHost string
-	var metricPort int 
+	var metricPort int
 	var g *graphite.Graphite
 
 	if *enableGraphite != "none" {
@@ -111,6 +112,11 @@ func main() {
 			go updateOled(temperature, humidity, pressure, font)
 		}
 
+		if *enableStdout {
+			fmt.Printf("temperature: %s\n", strconv.FormatFloat(temperature, 'f', 6, 64))
+			fmt.Printf("humidity: %s\n", strconv.FormatFloat(humidity, 'f', 6, 64))
+			fmt.Printf("pressure: %s\n", strconv.FormatFloat(pressure, 'f', 6, 64))
+		}
 		time.Sleep(10 * time.Second)
 	}
 }
